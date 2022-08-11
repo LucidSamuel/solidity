@@ -13,7 +13,8 @@ class APIHelperError(Exception):
 
 class JobNotSuccessful(APIHelperError):
     def __init__(self, name: str, status: str):
-        assert status != 'success'
+        if status == 'success':
+            raise AssertionError
 
         self.name = name
         self.status = status
@@ -104,7 +105,8 @@ class CircleCI:
         self.debug_requests = debug_requests
 
     def paginated_query_api_iterator(self, url: str, params: Mapping[str, str], max_pages: int = DEFAULT_MAX_PAGES):
-        assert 'page-token' not in params
+        if 'page-token' in params:
+            raise AssertionError
 
         page_count = 0
         next_page_token = None
@@ -157,7 +159,8 @@ class CircleCI:
         items = self.paginated_query_api(f'{self.BASE_URL}/workflow/{workflow_id}/job', {})
         jobs_by_name = {job['name']: job for job in items}
 
-        assert len(jobs_by_name) <= len(items)
+        if len(jobs_by_name) > len(items):
+            raise AssertionError
         if len(jobs_by_name) < len(items):
             raise InvalidResponse("Job names in the workflow are not unique.")
 
@@ -177,7 +180,8 @@ class CircleCI:
         items = self.paginated_query_api(f'{self.BASE_URL}/project/gh/{self.project_slug}/{job_number}/artifacts', {})
         artifacts_by_name = {artifact['path']: artifact for artifact in items}
 
-        assert len(artifacts_by_name) <= len(items)
+        if len(artifacts_by_name) > len(items):
+            raise AssertionError
         if len(artifacts_by_name) < len(items):
             raise InvalidResponse("Names of artifacts attached to the job are not unique.")
 

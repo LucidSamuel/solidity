@@ -570,7 +570,8 @@ class FileTestRunner:
 
             # Process diagnostics first
             self.expected_diagnostics = next(self.parsed_testcases)
-            assert isinstance(self.expected_diagnostics, TestParser.Diagnostics)
+            if not isinstance(self.expected_diagnostics, TestParser.Diagnostics):
+                raise AssertionError
             if not self.expected_diagnostics.has_header:
                 return
 
@@ -953,7 +954,8 @@ class SolidityLSPTestSuite: # {{{
         and then returns its passed params.
         An exception is raised on expectation failures.
         """
-        assert message is not None
+        if message is None:
+            raise AssertionError
         if 'error' in message.keys():
             code = message['error']["code"]
             text = message['error']['message']
@@ -974,7 +976,8 @@ class SolidityLSPTestSuite: # {{{
         for _ in range(0, num_files):
             message = solc.receive_message()
 
-            assert message is not None # This can happen if the server aborts early.
+            if message is None:
+                raise AssertionError
 
             reports.append(
                 self.require_params_for_method(
@@ -1108,7 +1111,8 @@ class SolidityLSPTestSuite: # {{{
             )
 
         else:
-            assert len(startEndColumns) == 2
+            if len(startEndColumns) != 2:
+                raise AssertionError
             [startColumn, endColumn] = startEndColumns
             self.expect_equal(
                 diagnostic['range'],

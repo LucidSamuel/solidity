@@ -33,15 +33,19 @@ DEFAULT_DIFFERENCE_STYLE = {
     DiffMode.IN_PLACE: DifferenceStyle.ABSOLUTE,
     DiffMode.TABLE: DifferenceStyle.HUMANIZED,
 }
-assert all(t in DiffMode for t in DEFAULT_DIFFERENCE_STYLE)
-assert all(d in DifferenceStyle for d in DEFAULT_DIFFERENCE_STYLE.values())
+if not all(t in DiffMode for t in DEFAULT_DIFFERENCE_STYLE):
+    raise AssertionError
+if not all(d in DifferenceStyle for d in DEFAULT_DIFFERENCE_STYLE.values()):
+    raise AssertionError
 
 DEFAULT_OUTPUT_FORMAT = {
     DiffMode.IN_PLACE: OutputFormat.JSON,
     DiffMode.TABLE: OutputFormat.CONSOLE,
 }
-assert all(m in DiffMode for m in DEFAULT_OUTPUT_FORMAT)
-assert all(o in OutputFormat for o in DEFAULT_OUTPUT_FORMAT.values())
+if not all(m in DiffMode for m in DEFAULT_OUTPUT_FORMAT):
+    raise AssertionError
+if not all(o in OutputFormat for o in DEFAULT_OUTPUT_FORMAT.values()):
+    raise AssertionError
 
 
 class ValidationError(Exception):
@@ -83,7 +87,8 @@ class BenchmarkDiffer:
         return diff
 
     def _diff_scalars(self, before: Any, after: Any) -> Optional[Union[str, int, float, dict]]:
-        assert not isinstance(before, dict) or not isinstance(after, dict)
+        if not (not isinstance(before, dict) or not isinstance(after, dict)):
+            raise AssertionError
 
         if before is None and after is None:
             return {}
@@ -196,9 +201,12 @@ class DiffTableSet:
         self.row_headers = sorted(project for project in diff)
 
         # All dimensions must have unique values
-        assert len(self.table_headers) == len(set(self.table_headers))
-        assert len(self.column_headers) == len(set(self.column_headers))
-        assert len(self.row_headers) == len(set(self.row_headers))
+        if len(self.table_headers) != len(set(self.table_headers)):
+            raise AssertionError
+        if len(self.column_headers) != len(set(self.column_headers)):
+            raise AssertionError
+        if len(self.row_headers) != len(set(self.row_headers)):
+            raise AssertionError
 
         self.cells = {
             preset: {
@@ -215,7 +223,8 @@ class DiffTableSet:
         return max(len(h) for h in self.row_headers)
 
     def calculate_column_widths(self, table_header: str) -> Sequence[int]:
-        assert table_header in self.table_headers
+        if table_header not in self.table_headers:
+            raise AssertionError
 
         return [
             max(
@@ -250,7 +259,8 @@ class DiffTableSet:
 
     @classmethod
     def _cell_content(cls, diff: dict, project: str, preset: str, attribute: str) -> str:
-        assert project in diff
+        if project not in diff:
+            raise AssertionError
 
         if isinstance(diff[project], str):
             return diff[project]
@@ -279,7 +289,8 @@ class DiffTableFormatter:
         if output_format == OutputFormat.JSON:
             return json.dumps(diff_table_set.cells, indent=4, sort_keys=True)
         else:
-            assert output_format in {OutputFormat.CONSOLE, OutputFormat.MARKDOWN}
+            if output_format not in {OutputFormat.CONSOLE, OutputFormat.MARKDOWN}:
+                raise AssertionError
 
             output = ''
             for table_header in diff_table_set.table_headers:
@@ -314,7 +325,8 @@ class DiffTableFormatter:
 
     @classmethod
     def _format_separator_row(cls, widths: Sequence[int], output_format: OutputFormat):
-        assert output_format in {OutputFormat.CONSOLE, OutputFormat.MARKDOWN}
+        if output_format not in {OutputFormat.CONSOLE, OutputFormat.MARKDOWN}:
+            raise AssertionError
 
         if output_format == OutputFormat.MARKDOWN:
             return '|:' + ':|-'.join('-' * width for width in widths) + ':|'
@@ -323,7 +335,8 @@ class DiffTableFormatter:
 
     @classmethod
     def _format_data_row(cls, cells: Sequence[Union[int, float, str]], widths: Sequence[int]):
-        assert len(cells) == len(widths)
+        if len(cells) != len(widths):
+            raise AssertionError
 
         return '| ' + ' | '.join(str(cell).rjust(width) for cell, width in zip(cells, widths)) + ' |'
 
@@ -441,7 +454,8 @@ def main():
         if options.diff_mode == DiffMode.IN_PLACE:
             print(json.dumps(diff, indent=4, sort_keys=True))
         else:
-            assert options.diff_mode == DiffMode.TABLE
+            if options.diff_mode != DiffMode.TABLE:
+                raise AssertionError
             print(DiffTableFormatter.run(DiffTableSet(diff), options.output_format))
 
         return 0

@@ -238,7 +238,8 @@ def parse_report(rst_report: str) -> GasReport:
 
                 deployment_costs[contract] = (min_gas, max_gas, avg_gas)
             else:
-                assert expected_row_type is None
+                if expected_row_type is not None:
+                    raise AssertionError
                 raise ReportParsingError("Found data row without a section header.", line, line_number)
 
         except ValueError as error:
