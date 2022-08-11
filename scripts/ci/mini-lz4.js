@@ -1,4 +1,4 @@
-function uncompress(source, uncompressedSize) {
+function uncompress (source, uncompressedSize) {
 /*
 based off https://github.com/emscripten-core/emscripten/blob/main/third_party/mini-lz4.js
 The license only applies to the body of this function (``uncompress``).
@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 changes have the same license
 */
-/**
+  /**
  * Decode a block. Assumptions: input contains all sequences of a
  * chunk, output is large enough to receive the decoded data.
  * If the output buffer is too small, an error will be thrown.
@@ -44,73 +44,69 @@ changes have the same license
  * @return {number} number of decoded bytes
  * @private
  */
-function uncompressBlock (input, output, sIdx, eIdx) {
-	sIdx = sIdx || 0
-	eIdx = eIdx || (input.length - sIdx)
-	// Process each sequence in the incoming data
-	for (var i = sIdx, n = eIdx, j = 0; i < n;) {
-		var token = input[i++]
+  function uncompressBlock (input, output, sIdx, eIdx) {
+    sIdx = sIdx || 0
+    eIdx = eIdx || (input.length - sIdx)
+    // Process each sequence in the incoming data
+    for (var i = sIdx, n = eIdx, j = 0; i < n;) {
+      const token = input[i++]
 
-		// Literals
-		var literals_length = (token >> 4)
-		if (literals_length > 0) {
-			// length of literals
-			var l = literals_length + 240
-			while (l === 255) {
-				l = input[i++]
-				literals_length += l
-			}
+      // Literals
+      let literals_length = (token >> 4)
+      if (literals_length > 0) {
+        // length of literals
+        var l = literals_length + 240
+        while (l === 255) {
+          l = input[i++]
+          literals_length += l
+        }
 
-			// Copy the literals
-			var end = i + literals_length
-			while (i < end) output[j++] = input[i++]
+        // Copy the literals
+        var end = i + literals_length
+        while (i < end) output[j++] = input[i++]
 
-			// End of buffer?
-			if (i === n) return j
-		}
+        // End of buffer?
+        if (i === n) return j
+      }
 
-		// Match copy
-		// 2 bytes offset (little endian)
-		var offset = input[i++] | (input[i++] << 8)
+      // Match copy
+      // 2 bytes offset (little endian)
+      const offset = input[i++] | (input[i++] << 8)
 
-		// XXX 0 is an invalid offset value
-		if (offset === 0) return j
-		if (offset > j) return -(i-2)
+      // XXX 0 is an invalid offset value
+      if (offset === 0) return j
+      if (offset > j) return -(i - 2)
 
-		// length of match copy
-		var match_length = (token & 0xf)
-		var l = match_length + 240
-		while (l === 255) {
-			l = input[i++]
-			match_length += l
-		}
-		// Copy the match
-		var pos = j - offset // position of the match copy in the current output
-		var end = j + match_length + 4 // minmatch = 4
-		while (j < end) output[j++] = output[pos++]
-	}
+      // length of match copy
+      let match_length = (token & 0xf)
+      var l = match_length + 240
+      while (l === 255) {
+        l = input[i++]
+        match_length += l
+      }
+      // Copy the match
+      let pos = j - offset // position of the match copy in the current output
+      var end = j + match_length + 4 // minmatch = 4
+      while (j < end) output[j++] = output[pos++]
+    }
 
-	return j
-}
-var result = new ArrayBuffer(uncompressedSize);
-var sourceIndex = 0;
-var destIndex = 0;
-var blockSize;
-while((blockSize = (source[sourceIndex] | (source[sourceIndex + 1] << 8) | (source[sourceIndex + 2] << 16) | (source[sourceIndex + 3] << 24))) > 0)
-{
-	sourceIndex += 4;
-	if (blockSize & 0x80000000)
-	{
-		blockSize &= 0x7FFFFFFFF;
-		for (var i = 0; i < blockSize; i++) {
-			result[destIndex++] = source[sourceIndex++];
-		}
-	}
-	else
-	{
-		destIndex += uncompressBlock(source, new Uint8Array(result, destIndex, uncompressedSize - destIndex), sourceIndex, sourceIndex + blockSize);
-		sourceIndex += blockSize;
-	}
-}
-return new Uint8Array(result, 0, uncompressedSize);
+    return j
+  }
+  const result = new ArrayBuffer(uncompressedSize)
+  let sourceIndex = 0
+  let destIndex = 0
+  let blockSize
+  while ((blockSize = (source[sourceIndex] | (source[sourceIndex + 1] << 8) | (source[sourceIndex + 2] << 16) | (source[sourceIndex + 3] << 24))) > 0) {
+    sourceIndex += 4
+    if (blockSize & 0x80000000) {
+      blockSize &= 0x7FFFFFFFF
+      for (let i = 0; i < blockSize; i++) {
+        result[destIndex++] = source[sourceIndex++]
+      }
+    } else {
+      destIndex += uncompressBlock(source, new Uint8Array(result, destIndex, uncompressedSize - destIndex), sourceIndex, sourceIndex + blockSize)
+      sourceIndex += blockSize
+    }
+  }
+  return new Uint8Array(result, 0, uncompressedSize)
 }
