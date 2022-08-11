@@ -112,7 +112,8 @@ def write_cases(f, solidityTests, yulTests):
             fi.write(remainder)
 
 def extract_and_write(path, language):
-    assert language in ["solidity", "yul", ""]
+    if language not in ["solidity", "yul", ""]:
+        raise AssertionError
     yulCases = []
     cases = []
 

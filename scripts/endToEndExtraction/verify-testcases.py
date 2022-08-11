@@ -157,7 +157,8 @@ class TraceAnalyser:
         for trace_id, trace in enumerate(left.traces):
             left_trace = trace
             right_trace = right.traces[trace_id]
-            assert left_trace.kind == right_trace.kind
+            if left_trace.kind != right_trace.kind:
+                raise AssertionError
             if str(left_trace) != str(right_trace):
                 mismatch_info = "    " + str(left_trace) + "\n"
                 mismatch_info += "    " + str(right_trace) + "\n"

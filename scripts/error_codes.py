@@ -61,7 +61,8 @@ def find_ids_in_source_files(file_names):
 
 
 def get_next_id(available_ids):
-    assert len(available_ids) > 0, "Out of IDs"
+    if len(available_ids) <= 0:
+        raise AssertionError("Out of IDs")
     next_id = random.choice(list(available_ids))
     available_ids.remove(next_id)
     return next_id
@@ -80,9 +81,11 @@ def fix_ids_in_source_file(file_name, id_to_count, available_ids):
 
         # incorrect id or id has a duplicate somewhere
         if not in_comment(source, m.start()) and (len(error_id) != 4 or error_id[0] == "0" or id_to_count[error_id] > 1):
-            assert error_id in id_to_count
+            if error_id not in id_to_count:
+                raise AssertionError
             new_id = get_next_id(available_ids)
-            assert new_id not in id_to_count
+            if new_id in id_to_count:
+                raise AssertionError
             id_to_count[error_id] -= 1
         else:
             new_id = error_id
@@ -204,7 +207,8 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
         "1834", # Unimplemented feature error, as we do not test it anymore via cmdLineTests
         "5430"  # basefee being used in inline assembly for EVMVersion < london
     }
-    assert len(test_ids & white_ids) == 0, "The sets are not supposed to intersect"
+    if len(test_ids & white_ids) != 0:
+        raise AssertionError("The sets are not supposed to intersect")
     test_ids |= white_ids
 
     test_only_ids = test_ids - source_ids
@@ -325,7 +329,8 @@ def main(argv):
     if check:
         sys.exit(1)
 
-    assert fix, "Unexpected state, should not come here without --fix"
+    if not fix:
+        raise AssertionError("Unexpected state, should not come here without --fix")
 
     if not no_confirm:
         answer = input(
